@@ -1,17 +1,299 @@
 
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IPSS Self-Assessment</title>
-    <meta property="og:title" content="IPSS Self-Assessment by Anurag Pande" />
-    <meta property="og:description" content="Quick, private IPSS self-check with instant score." />
-    <meta property="og:type" content="website" />
-    <link rel="icon" href="/REPO_NAME/favicon.svg">
-  </head>
-  <body class="bg-white">
-    <div id="root"></div>
-    <script type="module" src="/REPO_NAME/src/main.tsx"></script>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPSS Self-Assessment — by Anurag Pande</title>
+<meta name="description" content="Quick, private IPSS self-check with instant score and email capture.">
+<style>
+  :root { --sky:#0ea5e9; --emerald:#10b981; --amber:#f59e0b; --rose:#ef4444; --ink:#0b1322; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial; color:#0f172a; background:radial-gradient(ellipse at top,#f0f9ff, #fff); }
+  .container { max-width:1100px; margin:0 auto; padding:24px; }
+  .hero { display:flex; gap:12px; align-items:center; margin:16px 0 8px; }
+  .logo { width:40px; height:40px; border-radius:14px; background:var(--sky); display:grid; place-items:center; color:#fff; }
+  .card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 6px 18px rgba(2, 6, 23, 0.06); }
+  .card-header { padding:16px; border-bottom:1px solid #eef2f7; font-weight:600; }
+  .card-body { padding:16px; }
+  .grid { display:grid; gap:16px; }
+  @media (min-width: 900px){ .layout{ display:grid; grid-template-columns:1.6fr 1fr; gap:16px; } }
+  label { font-size:14px; color:#334155; display:block; margin-bottom:6px; }
+  input, select { width:100%; height:40px; border:1px solid #cbd5e1; border-radius:10px; padding:0 12px; outline:none; }
+  input:focus, select:focus { border-color:var(--sky); box-shadow:0 0 0 3px rgba(14,165,233,.25); }
+  .row2 { display:grid; gap:16px; grid-template-columns:1fr 1fr; }
+  .muted { font-size:12px; color:#64748b; }
+  button { height:42px; padding:0 14px; border-radius:10px; background:#0ea5e9; color:#fff; border:none; font-weight:600; cursor:pointer; }
+  button[disabled]{ background:#cbd5e1; cursor:not-allowed; }
+  .badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; color:#fff; font-size:12px; font-weight:600; }
+  .b-emerald{ background:var(--emerald); } .b-amber{ background:var(--amber); } .b-rose{ background:var(--rose); }
+  .msg{ margin-top:8px; font-size:14px; display:flex; align-items:center; gap:8px; }
+  .ok{ color:#166534; } .err{ color:#b91c1c; }
+  .tips li{ margin-left:18px; list-style:disc; }
+  footer { border-top:1px solid #e2e8f0; background:#fff; margin-top:24px; }
+  footer .inner{ max-width:1100px; margin:0 auto; padding:12px 24px; font-size:12px; color:#64748b; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+  /* Gauge */
+  .gauge { width:180px; height:180px; }
+  .g-bg { stroke:#e2e8f0; fill:none; stroke-width:14; }
+  .g-fg { stroke:var(--sky); fill:none; stroke-width:14; stroke-linecap:round; transform:rotate(-90deg); transform-origin:50% 50%; transition:stroke-dashoffset .4s ease; }
+  .score { font-weight:700; font-size:42px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <div class="logo" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 3v18h18"/><path d="M7 13h3v8H7zM12 8h3v13h-3zM17 5h3v16h-3z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 style="margin:0;font-size:26px;">IPSS Self-Assessment</h1>
+        <div class="muted">by Anurag Pande</div>
+      </div>
+    </div>
+    <p class="muted" style="max-width:760px;margin:8px 0 20px;">
+      Quick IPSS self-check. Results are informational only and not a diagnosis. Please consult a healthcare professional.
+    </p>
+
+    <div class="layout">
+      <!-- Form -->
+      <div class="card">
+        <div class="card-header">Questionnaire</div>
+        <div class="card-body">
+          <form id="ipssForm" class="grid">
+            <div class="row2">
+              <div>
+                <label for="name">Name <span style="color:#ef4444">*</span></label>
+                <input id="name" name="name" placeholder="Your full name" required>
+              </div>
+              <div>
+                <label for="email">Email <span style="color:#ef4444">*</span></label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" required>
+                <div class="muted">We never share your email.</div>
+              </div>
+            </div>
+
+            <div class="row2">
+              <div>
+                <label for="q1">Incomplete emptying</label>
+                <select id="q1" name="q1"><option value="">Select</option></select>
+              </div>
+              <div>
+                <label for="q2">Frequency</label>
+                <select id="q2" name="q2"><option value="">Select</option></select>
+              </div>
+              <div>
+                <label for="q3">Intermittency</label>
+                <select id="q3" name="q3"><option value="">Select</option></select>
+              </div>
+              <div>
+                <label for="q4">Urgency</label>
+                <select id="q4" name="q4"><option value="">Select</option></select>
+              </div>
+              <div>
+                <label for="q5">Weak stream</label>
+                <select id="q5" name="q5"><option value="">Select</option></select>
+              </div>
+              <div>
+                <label for="q6">Straining</label>
+                <select id="q6" name="q6"><option value="">Select</option></select>
+              </div>
+              <div>
+                <label for="q7">Nocturia (times/night)</label>
+                <select id="q7" name="q7"><option value="">Select</option></select>
+              </div>
+            </div>
+
+            <div>
+              <label for="qol">Quality of Life (0–6, optional)</label>
+              <input id="qol" name="qol" type="number" min="0" max="6" placeholder="0–6">
+            </div>
+
+            <label style="display:flex; gap:10px; align-items:flex-start;">
+              <input type="checkbox" id="consent" required>
+              <span class="muted">I consent to share these responses for research and product improvement. I understand this is not medical advice.</span>
+            </label>
+
+            <div style="display:flex; gap:12px; align-items:center;">
+              <button id="submitBtn" type="submit" disabled>Submit assessment</button>
+              <div class="muted" id="hint">Enter name & valid email, answer all items, and consent.</div>
+            </div>
+
+            <div id="serverMsg" class="msg ok" style="display:none;">✓ Thanks! Your IPSS total is <strong id="serverTotal"></strong>.</div>
+            <div id="serverErr" class="msg err" style="display:none;">⚠ <span id="serverErrText"></span></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Visuals -->
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">Live Score</div>
+          <div class="card-body" style="display:grid; grid-template-columns:180px 1fr; gap:16px; align-items:center;">
+            <svg class="gauge" viewBox="0 0 200 200" aria-hidden="true">
+              <circle class="g-bg" cx="100" cy="100" r="70"></circle>
+              <circle id="gFG" class="g-fg" cx="100" cy="100" r="70"
+                      stroke-dasharray="439.82" stroke-dashoffset="439.82"></circle>
+            </svg>
+            <div>
+              <div class="score" id="scoreVal">0</div>
+              <div id="sevBadge" class="badge b-emerald">Mild</div>
+              <div class="muted" style="margin-top:8px;">International Prostate Symptom Score (0–35)</div>
+              <div class="muted" style="margin-top:10px;">
+                <strong>How to read:</strong> 0–7: Mild • 8–19: Moderate • 20–35: Severe
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Tips for Accurate Responses</div>
+          <div class="card-body muted">
+            <ul class="tips">
+              <li>Answer based on the <strong>last month</strong>.</li>
+              <li>If unsure, pick the option that feels most typical.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div id="insightsCard" class="card" style="display:none;">
+          <div class="card-header">What your score suggests</div>
+          <div class="card-body muted">
+            <p>Your total score is <strong id="finalScore"></strong>. <span id="finalBadge" class="badge b-emerald">Mild</span></p>
+            <ul class="tips">
+              <li>Mild (0–7): lifestyle changes and monitoring may help.</li>
+              <li>Moderate (8–19): consider discussing options with a healthcare professional.</li>
+              <li>Severe (20–35): seek medical advice to evaluate therapies.</li>
+            </ul>
+            <p style="font-size:12px;">This tool is informational and not a substitute for medical care.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="inner">
+        <div>© <span id="yr"></span> Anurag Pande. All rights reserved.</div>
+        <div class="muted"><a href="#" style="color:#0ea5e9; text-decoration:none;">Privacy</a> • <a href="#" style="color:#0ea5e9; text-decoration:none;">Terms</a></div>
+      </div>
+    </footer>
+  </div>
+
+<script>
+  // === CONFIG: paste your Apps Script Web App URL here ===
+  const ENDPOINT = 'https://script.google.com/macros/s/PASTE_YOUR_WEB_APP_URL/exec';
+
+  // Build 0–5 options for IPSS items
+  ['q1','q2','q3','q4','q5','q6','q7'].forEach(id => {
+    const sel = document.getElementById(id);
+    for (let i=0; i<=5; i++) {
+      const o = document.createElement('option'); o.value = String(i); o.textContent = i;
+      sel.appendChild(o);
+    }
+  });
+
+  const form = document.getElementById('ipssForm');
+  const inputs = [...form.querySelectorAll('input, select')];
+  const submitBtn = document.getElementById('submitBtn');
+  const hint = document.getElementById('hint');
+  const scoreVal = document.getElementById('scoreVal');
+  const gFG = document.getElementById('gFG');
+  const sevBadge = document.getElementById('sevBadge');
+  const insights = document.getElementById('insightsCard');
+  const finalScore = document.getElementById('finalScore');
+  const finalBadge = document.getElementById('finalBadge');
+  const serverMsg = document.getElementById('serverMsg');
+  const serverTotal = document.getElementById('serverTotal');
+  const serverErr = document.getElementById('serverErr');
+  const serverErrText = document.getElementById('serverErrText');
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  const CIRC = 2 * Math.PI * 70; // r=70
+  gFG.setAttribute('stroke-dasharray', CIRC.toFixed(2)); gFG.style.strokeDashoffset = CIRC;
+
+  function totalScore(){
+    let t = 0;
+    for (const id of ['q1','q2','q3','q4','q5','q6','q7']) {
+      const v = document.getElementById(id).value;
+      if (v === '') return null;
+      t += parseInt(v,10);
+    }
+    return t;
+  }
+  function severity(t){
+    if (t >= 20) return ['Severe','b-rose'];
+    if (t >= 8)  return ['Moderate','b-amber'];
+    return ['Mild','b-emerald'];
+  }
+  function updateGauge(){
+    const t = totalScore() ?? 0;
+    scoreVal.textContent = t;
+    const ratio = Math.max(0, Math.min(1, t/35));
+    const off = CIRC * (1 - ratio);
+    gFG.style.strokeDashoffset = off.toFixed(2);
+    const [lab, cls] = severity(t);
+    sevBadge.textContent = lab;
+    sevBadge.className = 'badge ' + cls;
+  }
+  inputs.forEach(el => el.addEventListener('input', () => {
+    updateGauge();
+    validateForm();
+  }));
+
+  function validateForm(){
+    const nameOK = (document.getElementById('name').value.trim().length >= 2);
+    const emailV = document.getElementById('email').value.trim();
+    const emailOK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailV);
+    const allQs = totalScore() !== null;
+    const consent = document.getElementById('consent').checked;
+    const ok = nameOK && emailOK && allQs && consent;
+    submitBtn.disabled = !ok;
+    hint.style.display = ok ? 'none' : 'block';
+  }
+
+  // Capture UTM + page URL
+  const usp = new URLSearchParams(location.search);
+  const utm = {
+    utm_source: usp.get('utm_source') || '',
+    utm_medium: usp.get('utm_medium') || '',
+    utm_campaign: usp.get('utm_campaign') || '',
+    utm_term: usp.get('utm_term') || '',
+    utm_content: usp.get('utm_content') || '',
+    page_url: location.href
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    serverMsg.style.display = 'none'; serverErr.style.display = 'none';
+    submitBtn.disabled = true; const prevText = submitBtn.textContent; submitBtn.textContent = 'Submitting…';
+
+    const fd = new FormData(form);
+    Object.entries(utm).forEach(([k,v]) => fd.append(k, v));
+    try {
+      const res = await fetch(ENDPOINT, { method:'POST', body: fd });
+      const out = await res.json();
+      if (out.ok) {
+        serverTotal.textContent = out.total;
+        serverMsg.style.display = 'flex';
+        finalScore.textContent = out.total;
+        const [lab, cls] = severity(out.total || totalScore() || 0);
+        finalBadge.textContent = lab; finalBadge.className = 'badge ' + cls;
+        insights.style.display = 'block';
+      } else {
+        serverErrText.textContent = out.error || 'Submission failed.';
+        serverErr.style.display = 'flex';
+      }
+    } catch (err) {
+      serverErrText.textContent = 'Network error. Check the Apps Script deployment/access.';
+      serverErr.style.display = 'flex';
+    } finally {
+      submitBtn.textContent = prevText; validateForm();
+    }
+  });
+
+  // init
+  updateGauge(); validateForm();
+</script>
+</body>
 </html>
